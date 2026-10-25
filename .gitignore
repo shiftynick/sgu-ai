@@ -1,0 +1,6 @@
+# Audio, transcripts, clips and scraped pages are SGU's copyrighted content: kept local, never committed.
+data/
+.venv/
+.env
+__pycache__/
+*.pyc
