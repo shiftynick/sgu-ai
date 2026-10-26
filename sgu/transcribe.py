@@ -29,9 +29,15 @@ for n in [a for a in sys.argv[1:] if a != '--full']:
     # decode ourselves: faster-whisper's own file decoding breaks with this PyAV version
     pcm = subprocess.run(['ffmpeg', '-v', 'error', '-ss', str(start), '-i', str(mp3), '-f', 's16le', '-ac', '1', '-ar', '16000', '-'],
                          capture_output=True, check=True).stdout
-    segs, _ = model.transcribe(np.frombuffer(pcm, np.int16).astype(np.float32) / 32768, word_timestamps=True, vad_filter=True,
-                               beam_size=1, initial_prompt='The Skeptics Guide to the Universe. Steve Novella, Bob, Jay, Cara, Evan. Science or Fiction.')
-    words = [{'w': w.word, 's': round(w.start + start, 2), 'e': round(w.end + start, 2), 'p': round(w.probability, 3)}
-             for s in segs for w in s.words]
+    audio = np.frombuffer(pcm, np.int16).astype(np.float32) / 32768
+    def run(vad):
+        segs, _ = model.transcribe(audio, word_timestamps=True, vad_filter=vad, beam_size=1,
+                                   initial_prompt='The Skeptics Guide to the Universe. Steve Novella, Bob, Jay, Cara, Evan. Science or Fiction.')
+        return [{'w': w.word, 's': round(w.start + start, 2), 'e': round(w.end + start, 2), 'p': round(w.probability, 3)}
+                for s in segs for w in s.words]
+    try: words = run(True)
+    except IndexError:  # faster-whisper's word alignment occasionally fails on a VAD chunk; segmenting without VAD avoids it
+        try: words = run(False)
+        except IndexError as e: print(n, 'TRANSCRIPTION FAILED, skipped:', e, flush=True); continue
     out.write_text(json.dumps({'n': int(n), 'start': start, 'duration': dur, 'words': words}))
     print(n, f'{dur/60:.0f} min', len(words), 'words', flush=True)

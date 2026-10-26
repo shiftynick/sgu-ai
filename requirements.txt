@@ -7,3 +7,6 @@ soundfile
 numpy
 anthropic
 openai
+scikit-learn
+transformers
+praat-parselmouth

@@ -9,7 +9,7 @@ Each episode is marked in data/run/done/<n> once it has gone all the way through
 the reason); a restart picks up the next unmarked episodes. While batch k is in the post stage
 (Haiku, checks, cutting), batch k+1 is already downloading and transcribing.
 """
-import json, os, random, re, signal, subprocess, sys, time
+import json, os, random, re, shutil, signal, subprocess, sys, time
 from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 D, S = ROOT / 'data', ROOT / 'sgu'
@@ -136,7 +136,10 @@ if __name__ == '__main__':
         if running(): sys.exit(f'already running (pid {running()})')
         limit = int(args[args.index('--limit') + 1]) if '--limit' in args else 10 ** 6
         size = int(args[args.index('--batch') + 1]) if '--batch' in args else 25
-        p = subprocess.Popen(['python3', '-I', str(S / 'run.py'), '_loop', str(limit), str(size)], cwd=ROOT,
+        # its own systemd scope, so closing the terminal or app that started it doesn't kill it with its process group
+        # (systemd-run --scope execs the command, so the pid stays the same)
+        scope = ['systemd-run', '--user', '--scope', '--quiet', '--collect'] if shutil.which('systemd-run') else []
+        p = subprocess.Popen([*scope, 'python3', '-I', str(S / 'run.py'), '_loop', str(limit), str(size)], cwd=ROOT,
                              stdout=open(RUN / 'runner.out', 'a'), stderr=subprocess.STDOUT, start_new_session=True)
         (RUN / 'pid').write_text(str(p.pid)); print(f'started (pid {p.pid}); log: {RUN / "run.log"}')
     elif cmd == 'stop':

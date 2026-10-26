@@ -26,6 +26,22 @@ Run these from the project folder (the parent of `sgu/`). Each step skips episod
 9. `.venv/bin/python -I sgu/cut.py consensus` re-aligns the cues, runs the host-voice check and cuts the clips.
 10. `sgu/run_whisper.sh sgu/check_clips.py > data/check_clips.log` re-transcribes the clips. Then `python3 -I sgu/clip_text.py consensus` sets the final usable flag, and `python3 -I sgu/dataset.py` builds `data/dataset.csv`.
 
+## Classifiers
+
+Steps 11-14 work on the "Okay" clips; 15-16 on the item readings.
+
+11. `.venv/bin/python -I sgu/features.py` measures each clip against the host's own reading voice in that episode, cached in `data/feat/`. It records pitch, loudness and timing, how much the host spoke during the rogue's turn, WavLM and emotion-model embeddings of the cue and of "cue + name", and the emotion model's arousal/dominance/valence.
+12. `.venv/bin/python -I sgu/classify.py [--perms 200]` cross-validates classifiers by episode and writes `data/classify_report.txt`.
+    - `meta` is a no-audio baseline (position, cue word, year, rogue), because later rogues are right more often and "All right" is more common after a correct guess.
+    - Each audio or text feature set is tested on whether it improves on `meta`. The test shuffles that feature set between clips with the same position, cue word and era.
+    - A second table uses only episodes with both a right and a wrong guess before a cue, comparing the two within the episode.
+13. `.venv/bin/python -I sgu/eras.py` repeats the main analysis per era (`data/eras_report.txt`).
+14. `.venv/bin/python -I sgu/finetune.py --backbone wavlm|emotion [--clip cue_name|cue]` fine-tunes a speech model on the same folds (`data/finetune_report.txt`).
+15. `.venv/bin/python -I sgu/readings.py` finds the three item readings in each episode by matching the website's item text and measures them (`data/readings.csv`, `data/readings_emb.npz`).
+16. `.venv/bin/python -I sgu/readings_classify.py [--perms 200]` tests how often each feature set picks the fiction, with and without a text-only model in the baseline, and per era (`data/readings_report.txt`).
+
+`python3 -I sgu/listen.py` is a listening test for people. It plays random "Okay" clips at http://localhost:8765 and saves answers to `data/listen.csv`.
+
 Other scripts:
 - `compare.py` scores extraction backends against the hand labels in `data/reference.json`.
 - `extract.py qwen` uses the local Qwen3.5-9B server (stop it before running Whisper).
