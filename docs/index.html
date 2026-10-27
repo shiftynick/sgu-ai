@@ -10,7 +10,7 @@
   --page: #f9f9f7; --surface-1: #fcfcfb;
   --text-primary: #0b0b0b; --text-secondary: #52514e; --text-muted: #898781;
   --grid: #e1e0d9; --axis: #c3c2b7; --border: rgba(11,11,11,0.10);
-  --series-1: #2a78d6; --series-2: #eb6834; --context: #b9b7ae;
+  --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --series-4: #eda100; --series-5: #e87ba4; --context: #b9b7ae;
   --pos: #2a78d6; --neg: #e34948;
 }
 @media (prefers-color-scheme: dark) {
@@ -19,7 +19,7 @@
     --page: #0d0d0d; --surface-1: #1a1a19;
     --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #898781;
     --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
-    --series-1: #3987e5; --series-2: #d95926; --context: #5a5955;
+    --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500; --series-5: #d55181; --context: #5a5955;
     --pos: #3987e5; --neg: #e66767;
   }
 }
@@ -28,7 +28,7 @@
   --page: #0d0d0d; --surface-1: #1a1a19;
   --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #898781;
   --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
-  --series-1: #3987e5; --series-2: #d95926; --context: #5a5955;
+  --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500; --series-5: #d55181; --context: #5a5955;
   --pos: #3987e5; --neg: #e66767;
 }
 * { box-sizing: border-box; }
@@ -76,7 +76,7 @@ ul { padding-left: 22px; margin: 0 0 14px; }
 li { margin-bottom: 6px; }
 footer { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--grid); font-size: 14px; color: var(--text-muted); }
 @media print {
-  figure, .hero, .tiles, .note { break-inside: avoid; }
+  figure, .hero, .tiles, .note, table, li { break-inside: avoid; }
   h2, h3, figcaption { break-after: avoid; }
   details { display: none; }
 }
@@ -97,8 +97,8 @@ footer { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--grid);
 </ul>
 
 <div class="hero">
-  <div class="fig">48%<small> vs 33%</small></div>
-  <div class="cap"><b>The reading gives it away.</b> From the sound of Steve reading the three items, a model picks the fiction 48% of the time. Guessing gets 33%. The "Okay" handoff carries a much fainter tell.</div>
+  <div class="fig">50%<small> vs 33%</small></div>
+  <div class="cap"><b>The reading gives it away.</b> From the sound of Steve reading the three items, the best single model picks the fiction 50% of the time, and three speech models combined 53%. Guessing gets 33%. The "Okay" handoff carries a much fainter tell.</div>
 </div>
 
 <div class="tiles">
@@ -112,17 +112,17 @@ footer { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--grid);
 
 <figure>
   <figcaption><div class="t">How often each approach picks the fiction</div>
-  <div class="s">Share of 886 episodes where the top-scored reading was the fiction. The line marks guessing (33%).</div></figcaption>
+  <div class="s">Share of 886 episodes where the top-scored reading was the fiction, averaged over five training runs. Every voice model also knows the item's position and length. The line marks guessing (33%).</div></figcaption>
   <div class="chart" id="c-fiction"></div>
   <div class="legend"><span style="--k:var(--series-1)">Uses Steve's voice</span><span style="--k:var(--context)">Doesn't use his voice</span></div>
   <details><summary>Show as a table</summary><div id="t-fiction"></div></details>
 </figure>
 
-<p>The two strongest approaches use pretrained speech models: WavLM, a general model of speech, and an emotion model trained on podcast speech. Both turn each reading into a long list of numbers describing how it sounds, and we trained a simple classifier on those. We also fine-tuned WavLM end to end on the readings, letting the whole network adjust to this task. It reached 48%, the same as the simpler approach, which suggests that's about as much as the audio holds. The measured features (speaking rate, pauses, pitch and loudness) do less well, but they're easy to interpret, and they still clearly beat guessing.</p>
+<p>The two strongest approaches use pretrained speech models: WavLM, a general model of speech, and an emotion model trained on podcast speech. Both turn each reading into a long list of numbers describing how it sounds, and we trained a simple classifier on those. We also fine-tuned WavLM end to end on the readings, letting the whole network adjust to this task. It reached 48%, no better than the simpler approach. Averaging the three speech models' scores gets 53%. We tried ten combinations and this was the best, so the true figure is probably a point or so lower: call it about half. The measured features (speaking rate, pauses, pitch and loudness) do less well, but they're easy to interpret, and they still clearly beat guessing.</p>
 
 <h3>It's his voice, not the wording</h3>
 <p>Steve writes the fiction himself, so its wording might differ from the real news items in ways a model could learn. A text-only model does pick the fiction 40% of the time from the written item alone. So we gave each voice model that text prediction as well, to see whether the voice adds anything on top.</p>
-<p>It does: the emotion model still picks the fiction <b>49%</b> of the time, and the measured features <b>43%</b>, against 39% for the text alone. The voice-based and text-based predictions are almost unrelated (correlation 0.09), so they're picking up different things.</p>
+<p>It does: with the text prediction included, the emotion model still picks the fiction <b>49%</b> of the time, and the measured features <b>44%</b>, against 40% for the text alone. The voice-based and text-based predictions are only weakly related (correlations of 0.1 to 0.25), so they're picking up different things.</p>
 
 <h3>What it sounds like</h3>
 <p>Compared with the two real items in the same episode, the fiction is read slightly faster and with steadier delivery: less pitch movement, more even loudness, and a little less energy.</p>
@@ -135,7 +135,7 @@ footer { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--grid);
   <details><summary>Show as a table</summary><div id="t-diff"></div></details>
 </figure>
 
-<p>Each difference is small on its own: at most about a fifth of a standard deviation. Nobody could hear them in a single episode. The models get to 49% by combining many small cues across hundreds of episodes. A quick listening test by ear found nothing either.</p>
+<p>Each difference is small on its own: at most about a fifth of a standard deviation. Nobody could hear them in a single episode. The models get to about 50% by combining many small cues across hundreds of episodes. A quick listening test by ear found nothing either.</p>
 <p class="note">One possible reason: Steve wrote the fiction and knows it well, while the real items are summaries of other people's work. That would make the fiction a bit more fluent. We can't tell causes apart from audio, but either way the difference is in how it's read.</p>
 
 <h3>Over the years</h3>
@@ -163,21 +163,75 @@ footer { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--grid);
 <p>Pitch, timing, the pause before the "Okay", and what Steve says while a rogue is explaining showed nothing. Fine-tuning the speech models on these clips didn't improve on the simpler models either.</p>
 <p>One thing a listener could actually notice: Steve says "All right" rather than "Okay" a bit more often after a correct guess. That's in the baseline above, which is part of why it beats a coin flip.</p>
 
+<h2>Can the rogues hear it?</h2>
+<p>If the tell is real, do the rogues pick up on it, even without realising? They pick the fiction 61% of the time, better than the models, but they also have the wording and their own knowledge to go on. So agreement between them and the model proves nothing by itself.</p>
+<p>The fair test uses only their wrong guesses. When a rogue picks one of the two real items, do they pick the one the voice model found more fiction-like? If they ignore the tell, that happens half the time.</p>
+<ul>
+  <li>Across all 1,259 wrong guesses: <b>52%</b>, which is within chance (p = 0.18).</li>
+  <li>For the rogue who goes first, before anyone else's reasoning can sway them: <b>55%</b> of 452 (p = 0.03). That's suggestive, but it's one of several tests we ran, so we wouldn't call it established.</li>
+</ul>
+<p>So there's no clear sign the rogues hear it, which fits our own listening test.</p>
+
+<h2>The rogues' scorecard</h2>
+<p>Since we had every guess anyway: here is how the rogues have done across 861 Steve-hosted episodes. Everyone got it right in 185 episodes, and Steve swept the whole panel in 76.</p>
+
+<figure>
+  <figcaption><div class="t">Going later helps a lot</div>
+  <div class="s">Share of guesses that were right, by speaking order. Later rogues have heard the others' reasoning, and Steve's reactions.</div></figcaption>
+  <div class="chart" id="c-pos"></div>
+  <details><summary>Show as a table</summary><div id="t-pos"></div></details>
+</figure>
+
+<p>Because order matters so much, raw scores flatter whoever usually goes last. The table also shows each rogue's score against what an average rogue would get in the same speaking slots.</p>
+<div id="t-rogues"></div>
+
+<figure>
+  <figcaption><div class="t">Each rogue's record over the years</div>
+  <div class="s">Share of guesses that were right, by era. Each point is 40 to 210 guesses, so differences under about 10 points are noise.</div></figcaption>
+  <div class="chart" id="c-rogue-era"></div>
+  <details><summary>Show as a table</summary><div id="t-rogue-era"></div></details>
+</figure>
+<p>Cara and Rebecca top the table even after allowing for speaking order. Bob was strongest in the early years, and Evan has improved slowly. Perry's 43 guesses are too few to say much. Guest rogues aren't shown.</p>
+
 <h2>How we did it</h2>
 <ul>
   <li><b>Audio and transcripts.</b> Every episode in the public RSS feed was transcribed with Whisper (large-v3-turbo), with word-level timestamps.</li>
-  <li><b>Who guessed what.</b> Claude Haiku read each Science or Fiction segment twice, independently, and extracted each rogue's pick. A third run broke ties, and a separate pass checked the picks against Steve's recap at the reveal. The answer key came from theskepticsguide.org. On 10 hand-labelled episodes it got 39 of 39 picks right.</li>
+  <li><b>Who guessed what.</b> Claude Haiku read the transcript of each Science or Fiction segment twice, independently, and extracted each rogue's pick. A third run broke ties, and a separate pass checked the picks against Steve's recap at the reveal. On 10 hand-labelled episodes it got 39 of 39 picks right. The answer key itself came from theskepticsguide.org, not from the AI.</li>
+  <li><b>The text model.</b> A simple word-count model (TF-IDF with logistic regression), trained from scratch only on Steve's own items, and tested on episodes it never saw. It has no outside knowledge of science, so it can't know which claims are true; it only learns how Steve tends to word his fictions. For example, fictions are a little shorter on average (18 words against 21).</li>
   <li><b>Clips.</b> Each "Okay, &lt;name&gt;" was re-aligned to the audio and checked against Steve's voice using a speaker-recognition model. Item readings were found by matching the item text on the website against the transcript.</li>
   <li><b>Fair comparisons.</b> Every voice measurement is relative to Steve's own voice in the same episode, so recording quality and era drop out. Every model is tested on whole episodes it never saw in training.</li>
   <li><b>Significance.</b> We shuffled the audio between clips that share the same position, cue word and era (for the items: the same item slot), retrained, and counted how often the shuffled version did as well. A low p means the real audio beats its own shuffles.</li>
   <li><b>Excluded.</b> Live shows, specials, episodes without a usable answer key, and 13 episodes whose audio files are blank on the feed.</li>
 </ul>
 
-<h3>Caveats</h3>
+<h3>Weaknesses and limits</h3>
+<p>We've tried to list everything that could undermine these results.</p>
+<p><b>Is it really his voice?</b></p>
 <ul>
-  <li>The speech-model embeddings could pick up a little of the wording as well as the voice. The measured features (pace, pitch, loudness) don't depend on the words, and they still clearly beat guessing even with the text model included. So the core finding doesn't depend on the embeddings.</li>
-  <li>Some guess labels may still be wrong despite the checks (the extraction got 39 of 39 right on hand-checked episodes). Wrong labels would weaken the "Okay" result, not create it.</li>
-  <li>Correlation, not mechanism: we can say the fiction is read differently, not why.</li>
+  <li>The speech models (WavLM and the emotion model) were trained on other people's speech, and their numbers can carry some information about which words were said, not only how. So part of their 50% could come from the wording as spoken.</li>
+  <li>Our text check uses a deliberately simple word-count model. A stronger language model might explain more of the result from wording alone. We didn't use one, because a large language model brings its own knowledge of science and could simply know which claim is false, and that would no longer test Steve's writing.</li>
+  <li>The text check uses the item as written on the website. What Steve actually says can differ: he ad-libs, adds context and jokes. Those spoken extras aren't covered by the text check.</li>
+  <li>The measured features (pace, pitch, loudness) don't depend on the words, and they still beat guessing with the text included (44% against 40%). That part of the result doesn't rely on the speech models.</li>
+</ul>
+<p><b>The data</b></p>
+<ul>
+  <li>Item readings were found for 886 of the 1,109 episodes, by matching the website text to the transcript. Episodes where the match failed (for example where Steve paraphrased heavily or the transcript was poor) are missing, and they might differ from the rest.</li>
+  <li>Reading boundaries come from Whisper's word timings, which can be off by a fraction of a second.</li>
+  <li>About 19 of the 886 episodes with readings had a guest host rather than Steve (and the host is unknown for 38 more). We didn't remove them; they're about 2% of the data.</li>
+  <li>The rogues' picks were extracted by an AI from transcripts. It was checked on only 10 episodes (39 of 39 right), so a small error rate is likely. Errors there affect the "Okay" result, the rogues' test and the scorecard, but not the reading result, whose answer key comes from the website.</li>
+  <li>Audio quality, microphones and editing changed over 20 years. Comparing each reading with the other two from the same episode removes most of this, but not changes within an episode, such as Steve warming up from item 1 to item 3. The models know the item position, which covers some of that.</li>
+</ul>
+<p><b>The statistics</b></p>
+<ul>
+  <li>We tried many models, feature sets and combinations. Every one was tested on episodes it never saw, but reporting the best of many is still a little optimistic. The headline 50% is the best single model; the combined 53% was the best of ten combinations.</li>
+  <li>The permutation tests (shuffling the audio and retraining) were run for the simpler models and feature sets. The fine-tuned model and the combinations were tested on unseen episodes but not separately permutation-tested.</li>
+  <li>Each era has only about 170 episodes, so era-to-era differences of under about 7 points are within noise.</li>
+  <li>The listening tests had a single listener and few trials. They show the tell isn't obvious, not that nobody could learn it.</li>
+</ul>
+<p><b>Interpretation</b></p>
+<ul>
+  <li>Correlation, not mechanism: we can say the fiction is read differently, not why. Writing it himself, knowing it's false, or the fiction simply being easier to read aloud could all play a part.</li>
+  <li>A 50% hit rate is far from a reliable tell. In any single episode the model is wrong half the time.</li>
 </ul>
 
 <footer>
@@ -189,15 +243,16 @@ footer { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--grid);
 <script>
 const D = {
   fiction: [
-    {label: 'Item position and length', v: 32.0, voice: false},
-    {label: 'Wording of the item (text only)', v: 40.2, voice: false},
-    {label: 'Pace and hesitation', v: 36.7, voice: true},
-    {label: 'Pitch and loudness', v: 40.5, voice: true},
-    {label: 'Emotion scores', v: 37.6, voice: true},
-    {label: 'All measured features', v: 41.0, voice: true},
-    {label: 'WavLM speech model', v: 46.7, voice: true},
+    {label: 'Item position and length', v: 33.1, voice: false},
+    {label: 'Wording of the item (text only)', v: 40.6, voice: false},
+    {label: 'Pace and hesitation', v: 34.5, voice: true},
+    {label: 'Emotion scores', v: 34.9, voice: true},
+    {label: 'Pitch and loudness', v: 40.4, voice: true},
+    {label: 'All measured features', v: 40.1, voice: true},
+    {label: 'WavLM speech model', v: 46.0, voice: true},
     {label: 'WavLM, fine-tuned', v: 48.1, voice: true},
-    {label: 'Emotion speech model', v: 48.4, voice: true},
+    {label: 'Emotion speech model', v: 50.0, voice: true},
+    {label: 'Three speech models combined', v: 52.8, voice: true},
   ],
   diff: [
     {label: 'Loudness', v: 0.175, p: '<0.001'},
@@ -224,6 +279,8 @@ const D = {
     {label: '+ emotion speech model', v: 0.621, sig: true, p: '0.005'},
     {label: '+ WavLM speech model', v: 0.627, sig: true, p: '0.005'},
   ],
+  rogues: {"Bob": {"guesses": 835, "right": 59.6, "vs_position": -0.9, "first": [49.7, 199], "eras": [[73.4, 154], [63.6, 143], [54.6, 163], [53.3, 169], [55.8, 206]]}, "Jay": {"guesses": 805, "right": 56.6, "vs_position": -3.0, "first": [41.2, 240], "eras": [[58.2, 146], [54.2, 144], [57.7, 149], [60.5, 162], [53.4, 204]]}, "Evan": {"guesses": 812, "right": 57.9, "vs_position": -3.1, "first": [42.2, 206], "eras": [[56.4, 156], [53.3, 150], [56.1, 155], [62.3, 159], [60.4, 192]]}, "Rebecca": {"guesses": 315, "right": 68.9, "vs_position": 7.3, "first": [51.3, 76], "eras": [[67.4, 141], [72.6, 135], [61.5, 39], null, null]}, "Cara": {"guesses": 449, "right": 71.3, "vs_position": 9.3, "first": [56.2, 112], "eras": [null, null, [64.4, 101], [71.4, 154], [74.7, 194]]}, "Perry": {"guesses": 43, "right": 46.5, "vs_position": -14.4, "first": [22.2, 9], "eras": [[46.5, 43], null, null, null, null]}},
+  position: {"1": [46.2, 861], "2": [57.1, 861], "3": [68.0, 853], "4": [74.1, 683]},
 };
 
 const NS = 'http://www.w3.org/2000/svg';
@@ -346,6 +403,53 @@ function table(id, head, rows) {
     txt(svg, x(d.v) + 12, cy + 5, d.v.toFixed(3), {'font-size': 13, fill: 'var(--text-secondary)'});
   });
   table('t-okay', ['Model', 'AUC', 'p (vs baseline)'], D.okay.map(d => [d.label, d.v.toFixed(3), d.p || '']));
+})();
+
+// columns by speaking position
+(function () {
+  const host = document.getElementById('c-pos'), tip = tooltip(host), P = Object.entries(D.position);
+  const W = 720, L = 44, R = 20, top = 22, plotH = 180, H = top + plotH + 46, band = (W - L - R) / P.length, bw = 56;
+  const svg = el('svg', {viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': 'Column chart of rogue accuracy by speaking position'}, host);
+  const y = v => top + plotH - (v / 80) * plotH;
+  [0, 20, 40, 60, 80].forEach(t => { el('line', {x1: L, x2: W - R, y1: y(t), y2: y(t), stroke: t ? 'var(--grid)' : 'var(--axis)', 'stroke-width': 1}, svg); txt(svg, L - 8, y(t) + 4, t + '%', {'text-anchor': 'end', 'font-size': 13, fill: 'var(--text-muted)'}); });
+  const names = ['First', 'Second', 'Third', 'Fourth'];
+  P.forEach(([k, [v, n]], i) => {
+    const cx = L + band * i + band / 2;
+    const p = el('path', {d: vbarPath(cx - bw / 2, bw, y(0), y(v)), fill: 'var(--series-1)'}, svg);
+    hook(p, tip, host, v.toFixed(1) + '%', names[i] + ' to guess (' + n + ' guesses)');
+    txt(svg, cx, y(v) - 6, v.toFixed(0) + '%', {'text-anchor': 'middle', 'font-size': 13, fill: 'var(--text-secondary)'});
+    txt(svg, cx, top + plotH + 20, names[i], {'text-anchor': 'middle', 'font-size': 14, fill: 'var(--text-primary)'});
+    txt(svg, cx, top + plotH + 38, n + ' guesses', {'text-anchor': 'middle', 'font-size': 12, fill: 'var(--text-muted)'});
+  });
+  table('t-pos', ['Speaking order', 'Guesses', 'Right'], P.map(([k, [v, n]], i) => [names[i], String(n), v.toFixed(1) + '%']));
+})();
+
+// rogue table and lines by era
+(function () {
+  const R0 = Object.entries(D.rogues).sort((a, b) => b[1].vs_position - a[1].vs_position);
+  table('t-rogues', ['Rogue', 'Guesses', 'Right', 'Right when going first', 'Against an average rogue in the same slots'],
+    R0.map(([k, r]) => [k, String(r.guesses), r.right.toFixed(0) + '%', r.first[0].toFixed(0) + '% of ' + r.first[1], (r.vs_position > 0 ? '+' : '−') + Math.abs(r.vs_position).toFixed(0) + (Math.abs(r.vs_position).toFixed(0) === '1' ? ' point' : ' points')]));
+  const eras = ['2005–09', '2010–13', '2014–17', '2018–21', '2022–26'];
+  const show = [['Cara', 'var(--series-1)'], ['Rebecca', 'var(--series-2)'], ['Bob', 'var(--series-3)'], ['Evan', 'var(--series-4)'], ['Jay', 'var(--series-5)']];
+  const host = document.getElementById('c-rogue-era'), tip = tooltip(host);
+  const W = 720, L = 44, R = 90, top = 14, plotH = 220, H = top + plotH + 30, step = (W - L - R) / (eras.length - 1);
+  const svg = el('svg', {viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': 'Line chart of each rogue\'s accuracy by era'}, host);
+  const y = v => top + plotH - ((v - 40) / 40) * plotH, x = i => L + i * step;
+  [40, 50, 60, 70, 80].forEach(t => { el('line', {x1: L, x2: W - R, y1: y(t), y2: y(t), stroke: 'var(--grid)', 'stroke-width': 1}, svg); txt(svg, L - 8, y(t) + 4, t + '%', {'text-anchor': 'end', 'font-size': 13, fill: 'var(--text-muted)'}); });
+  eras.forEach((e, i) => txt(svg, x(i), H - 8, e, {'text-anchor': 'middle', 'font-size': 13, fill: 'var(--text-primary)'}));
+  const ends = [];
+  show.forEach(([name, c]) => {
+    const pts = D.rogues[name].eras.map((e, i) => e && e[1] >= 30 ? [x(i), y(e[0]), e, i] : null).filter(Boolean);
+    el('path', {d: pts.map((p, j) => (j ? 'L' : 'M') + p[0] + ',' + p[1]).join(''), fill: 'none', stroke: c, 'stroke-width': 2, 'stroke-linejoin': 'round'}, svg);
+    pts.forEach(p => { el('circle', {cx: p[0], cy: p[1], r: 4, fill: c, stroke: 'var(--surface-1)', 'stroke-width': 1.5}, svg);
+      const hit = el('circle', {cx: p[0], cy: p[1], r: 12, fill: 'transparent'}, svg);
+      hook(hit, tip, host, p[2][0].toFixed(1) + '%', name + ', ' + eras[p[3]] + ' (' + p[2][1] + ' guesses)'); });
+    const last = pts[pts.length - 1]; ends.push({name, c, x: last[0], y: last[1]});
+  });
+  // direct labels at each line's end, nudged apart so they don't collide
+  ends.sort((a, b) => a.y - b.y); for (let i = 1; i < ends.length; i++) if (ends[i].x === ends[i - 1].x && ends[i].y - ends[i - 1].y < 16) ends[i].y = ends[i - 1].y + 16;
+  ends.forEach(e => txt(svg, e.x + 9, e.y + 4, e.name, {'font-size': 13, fill: 'var(--text-primary)', 'font-weight': 560}));
+  table('t-rogue-era', ['Rogue', ...eras], show.map(([name]) => [name, ...D.rogues[name].eras.map(e => e ? e[0].toFixed(0) + '% of ' + e[1] : '')]));
 })();
 </script>
 </body>

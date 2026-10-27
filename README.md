@@ -25,7 +25,7 @@ The classifiers use pitch, loudness and pacing measured against the host's own v
 
 From the full archive: 1,109 episodes, of which 795 gave usable "Okay" clips and 886 gave usable item readings.
 
-**The fiction is in how he reads it.** From his voice reading the three items, a model picks the fiction 49% of the time, against 33% for guessing. The item's wording alone gets about 40%. The voice still adds the same amount with the wording model included, and the two predictions are almost unrelated, so it isn't picking up the text. He reads the fiction slightly faster and more smoothly, with flatter pitch, steadier loudness and a little less energy. The tell was strongest in 2005-2009 (61%) and is still there in every later era (41-51%).
+**The fiction is in how he reads it.** From his voice reading the three items, the best single model picks the fiction 50% of the time, and three speech models combined 53%, against 33% for guessing. The item's wording alone gets about 40%. The voice still adds the same amount with the wording model included, and the two predictions are only weakly related, so it isn't picking up the text. He reads the fiction slightly faster and more smoothly, with flatter pitch, steadier loudness and a little less energy. The tell was strongest in 2005-2009 (61%) and is still there in every later era (41-51%).
 
 **The "Okay" tell is real but faint.** After a correct guess, "Okay, <name>" sounds slightly more energetic and positive. Adding the audio raises the AUC from 0.60 (position, cue word, year and rogue alone) to about 0.63 (p = 0.005). That holds across positions and eras but is far too weak to use. Fine-tuning the speech models didn't improve on it, and pitch, timing and his words found nothing.
 

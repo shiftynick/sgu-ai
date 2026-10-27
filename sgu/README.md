@@ -39,8 +39,11 @@ Steps 11-14 work on the "Okay" clips; 15-16 on the item readings.
 14. `.venv/bin/python -I sgu/finetune.py --backbone wavlm|emotion [--clip cue_name|cue]` fine-tunes a speech model on the same folds (`data/finetune_report.txt`).
 15. `.venv/bin/python -I sgu/readings.py` finds the three item readings in each episode by matching the website's item text and measures them (`data/readings.csv`, `data/readings_emb.npz`).
 16. `.venv/bin/python -I sgu/readings_classify.py [--perms 200]` tests how often each feature set picks the fiction, with and without a text-only model in the baseline, and per era (`data/readings_report.txt`).
+17. `.venv/bin/python -I sgu/finetune_readings.py --backbone wavlm` fine-tunes WavLM to pick the fiction from the three readings (`data/finetune_readings_report.txt`).
+18. `.venv/bin/python -I sgu/rogues.py` combines the reading models, tests whether the rogues' wrong guesses lean towards the item the voice model flags, and tallies each rogue's record (`data/rogues_report.txt`, `data/rogues_stats.json`).
 
 `python3 -I sgu/listen.py` is a listening test for people. It plays random "Okay" clips at http://localhost:8765 and saves answers to `data/listen.csv`.
+`python3 -I sgu/listen_items.py [--filtered]` is the same kind of test for the readings, at http://localhost:8766.
 
 Other scripts:
 - `compare.py` scores extraction backends against the hand labels in `data/reference.json`.
