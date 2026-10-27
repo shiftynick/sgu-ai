@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Can you hear the fiction? A voice analysis of Science or Fiction</title>
+<style>
+.viz-root {
+  color-scheme: light;
+  --page: #f9f9f7; --surface-1: #fcfcfb;
+  --text-primary: #0b0b0b; --text-secondary: #52514e; --text-muted: #898781;
+  --grid: #e1e0d9; --axis: #c3c2b7; --border: rgba(11,11,11,0.10);
+  --series-1: #2a78d6; --series-2: #eb6834; --context: #b9b7ae;
+  --pos: #2a78d6; --neg: #e34948;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) .viz-root {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface-1: #1a1a19;
+    --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+    --series-1: #3987e5; --series-2: #d95926; --context: #5a5955;
+    --pos: #3987e5; --neg: #e66767;
+  }
+}
+:root[data-theme="dark"] .viz-root {
+  color-scheme: dark;
+  --page: #0d0d0d; --surface-1: #1a1a19;
+  --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #898781;
+  --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+  --series-1: #3987e5; --series-2: #d95926; --context: #5a5955;
+  --pos: #3987e5; --neg: #e66767;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body.viz-root { background: var(--page); color: var(--text-primary); font: 17px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 760px; margin: 0 auto; padding: 56px 24px 96px; }
+h1 { font-size: 34px; line-height: 1.2; margin: 0 0 12px; font-weight: 650; letter-spacing: -0.01em; }
+h2 { font-size: 24px; line-height: 1.3; margin: 56px 0 8px; font-weight: 620; }
+h3 { font-size: 18px; margin: 28px 0 4px; font-weight: 620; }
+p { margin: 0 0 14px; }
+.lede { font-size: 19px; color: var(--text-secondary); margin-bottom: 28px; }
+.muted { color: var(--text-muted); }
+.small { font-size: 14px; }
+a { color: var(--series-1); }
+.hero { display: flex; gap: 28px; align-items: flex-end; flex-wrap: wrap; background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 24px 28px; margin: 28px 0; }
+.hero .fig { font-size: 64px; font-weight: 650; line-height: 1; }
+.hero .fig small { font-size: 22px; font-weight: 500; color: var(--text-secondary); }
+.hero .cap { flex: 1; min-width: 240px; color: var(--text-secondary); }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin: 20px 0 8px; }
+.tile { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+.tile .label { font-size: 14px; color: var(--text-secondary); }
+.tile .value { font-size: 26px; font-weight: 620; }
+figure { margin: 24px 0 28px; background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 20px 20px 12px; }
+figcaption .t { font-weight: 620; font-size: 16px; }
+figcaption .s { font-size: 14px; color: var(--text-secondary); }
+.chart { position: relative; margin-top: 12px; }
+.chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+.chart text { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+.legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: 14px; color: var(--text-secondary); margin-top: 8px; }
+.legend span::before { content: ""; display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; background: var(--k); }
+details { margin-top: 10px; font-size: 14px; }
+details summary { cursor: pointer; color: var(--text-secondary); }
+table { border-collapse: collapse; margin: 10px 0 4px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 4px 14px 4px 0; border-bottom: 1px solid var(--grid); }
+th { color: var(--text-secondary); font-weight: 560; }
+td.n { text-align: right; }
+.tip { position: absolute; pointer-events: none; background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; font-size: 13px; box-shadow: 0 4px 14px rgba(0,0,0,0.12); opacity: 0; transition: opacity .1s; white-space: nowrap; z-index: 2; }
+.tip b { font-size: 15px; display: block; }
+.tip .k { color: var(--text-secondary); }
+.mark { cursor: default; }
+.chart text.v { paint-order: stroke; stroke: var(--surface-1); stroke-width: 4px; stroke-linejoin: round; }
+.mark:hover, .mark:focus { filter: brightness(1.12); outline: none; }
+.note { border-left: 3px solid var(--axis); padding: 2px 0 2px 14px; color: var(--text-secondary); margin: 18px 0; }
+ul { padding-left: 22px; margin: 0 0 14px; }
+li { margin-bottom: 6px; }
+footer { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--grid); font-size: 14px; color: var(--text-muted); }
+@media print {
+  figure, .hero, .tiles, .note { break-inside: avoid; }
+  h2, h3, figcaption { break-after: avoid; }
+  details { display: none; }
+}
+</style>
+</head>
+<body class="viz-root">
+<main>
+
+<h1>Can you hear the fiction?</h1>
+<p class="lede">A machine-listening look at 20 years of Science or Fiction: does Steve's voice give the game away?</p>
+
+<p>In every Science or Fiction, Steve reads three items, knowing which one is fake, and then listens to each rogue's guess knowing whether they're right. That's a lot of knowledge to keep out of your voice. So we ran the whole podcast archive through speech-analysis models to see whether any of it leaks.</p>
+
+<p>We looked in two places:</p>
+<ul>
+  <li><b>The handoff.</b> After each guess Steve moves on: "Okay, Jay." Does that "Okay" sound different when the guess he just heard was right?</li>
+  <li><b>The reading.</b> Does he read the fiction differently from the two real items?</li>
+</ul>
+
+<div class="hero">
+  <div class="fig">48%<small> vs 33%</small></div>
+  <div class="cap"><b>The reading gives it away.</b> From the sound of Steve reading the three items, a model picks the fiction 48% of the time. Guessing gets 33%. The "Okay" handoff carries a much fainter tell.</div>
+</div>
+
+<div class="tiles">
+  <div class="tile"><div class="label">Episodes processed</div><div class="value">1,109</div></div>
+  <div class="tile"><div class="label">Item readings analysed</div><div class="value">2,658</div><div class="label">from 886 episodes</div></div>
+  <div class="tile"><div class="label">"Okay" handoffs analysed</div><div class="value">1,668</div><div class="label">from 795 episodes</div></div>
+</div>
+
+<h2>The reading gives away the fiction</h2>
+<p>For each episode we found the three item readings in the audio and asked a model to pick which one was the fiction, using only the sound of Steve's voice. Every model was tested on episodes it had never seen during training.</p>
+
+<figure>
+  <figcaption><div class="t">How often each approach picks the fiction</div>
+  <div class="s">Share of 886 episodes where the top-scored reading was the fiction. The line marks guessing (33%).</div></figcaption>
+  <div class="chart" id="c-fiction"></div>
+  <div class="legend"><span style="--k:var(--series-1)">Uses Steve's voice</span><span style="--k:var(--context)">Doesn't use his voice</span></div>
+  <details><summary>Show as a table</summary><div id="t-fiction"></div></details>
+</figure>
+
+<p>The two strongest approaches use pretrained speech models: WavLM, a general model of speech, and an emotion model trained on podcast speech. Both turn each reading into a long list of numbers describing how it sounds, and we trained a simple classifier on those. We also fine-tuned WavLM end to end on the readings, letting the whole network adjust to this task. It reached 48%, the same as the simpler approach, which suggests that's about as much as the audio holds. The measured features (speaking rate, pauses, pitch and loudness) do less well, but they're easy to interpret, and they still clearly beat guessing.</p>
+
+<h3>It's his voice, not the wording</h3>
+<p>Steve writes the fiction himself, so its wording might differ from the real news items in ways a model could learn. A text-only model does pick the fiction 40% of the time from the written item alone. So we gave each voice model that text prediction as well, to see whether the voice adds anything on top.</p>
+<p>It does: the emotion model still picks the fiction <b>49%</b> of the time, and the measured features <b>43%</b>, against 39% for the text alone. The voice-based and text-based predictions are almost unrelated (correlation 0.09), so they're picking up different things.</p>
+
+<h3>What it sounds like</h3>
+<p>Compared with the two real items in the same episode, the fiction is read slightly faster and with steadier delivery: less pitch movement, more even loudness, and a little less energy.</p>
+
+<figure>
+  <figcaption><div class="t">How the fiction is read differently</div>
+  <div class="s">Fiction minus the average of the two real items in the same episode, in standard deviations of that difference. Only differences with p &lt; 0.01 are shown.</div></figcaption>
+  <div class="chart" id="c-diff"></div>
+  <div class="legend"><span style="--k:var(--pos)">Higher for the fiction</span><span style="--k:var(--neg)">Lower for the fiction</span></div>
+  <details><summary>Show as a table</summary><div id="t-diff"></div></details>
+</figure>
+
+<p>Each difference is small on its own: at most about a fifth of a standard deviation. Nobody could hear them in a single episode. The models get to 49% by combining many small cues across hundreds of episodes. A quick listening test by ear found nothing either.</p>
+<p class="note">One possible reason: Steve wrote the fiction and knows it well, while the real items are summaries of other people's work. That would make the fiction a bit more fluent. We can't tell causes apart from audio, but either way the difference is in how it's read.</p>
+
+<h3>Over the years</h3>
+<figure>
+  <figcaption><div class="t">How often the fiction is picked, by era</div>
+  <div class="s">Models trained on all eras together, scored on each era's episodes, with the text prediction included. The line marks guessing (33%).</div></figcaption>
+  <div class="chart" id="c-era"></div>
+  <div class="legend"><span style="--k:var(--series-1)">Emotion model</span><span style="--k:var(--series-2)">Measured features</span></div>
+  <details><summary>Show as a table</summary><div id="t-era"></div></details>
+</figure>
+<p>The tell was strongest in the early years. From 2005 to 2009 the emotion model picked the fiction 61% of the time. It has stayed above guessing ever since. Each era has only 160 to 210 episodes, so the year-to-year ups and downs are within noise. The early peak is the clearest pattern.</p>
+
+<h2>The "Okay" carries only a faint tell</h2>
+<p>We found 1,668 handoffs where Steve says "Okay" or "All right" and then a name, right after a guess, and labelled each by whether that guess was right. Rogues who guess later are right more often, because they've heard the others' reasoning. So the fair comparison is a baseline that knows the guess's position, the cue word, the year and which rogue answered, but hears no audio.</p>
+
+<figure>
+  <figcaption><div class="t">How well each model tells right from wrong guesses</div>
+  <div class="s">AUC: 0.5 is a coin flip, 1.0 is perfect. The baseline knows position, cue word, year and rogue but hears no audio. Each other row adds one kind of audio or text to it.</div></figcaption>
+  <div class="chart" id="c-okay"></div>
+  <div class="legend"><span style="--k:var(--series-1)">Adds significantly to the baseline (p = 0.005)</span><span style="--k:var(--context)">Adds nothing</span></div>
+  <details><summary>Show as a table</summary><div id="t-okay"></div></details>
+</figure>
+
+<p>Adding the audio helps slightly, from 0.60 to about 0.63. That's statistically solid, but it's far too small to call a guess right or wrong. The emotion model hears Steve's "Okay, Jay" as a little more energetic, assertive and positive after a correct guess. The difference is about a fifth of a standard deviation, and it shows up in every position and almost every era. It fades from 2022 on.</p>
+<p>Pitch, timing, the pause before the "Okay", and what Steve says while a rogue is explaining showed nothing. Fine-tuning the speech models on these clips didn't improve on the simpler models either.</p>
+<p>One thing a listener could actually notice: Steve says "All right" rather than "Okay" a bit more often after a correct guess. That's in the baseline above, which is part of why it beats a coin flip.</p>
+
+<h2>How we did it</h2>
+<ul>
+  <li><b>Audio and transcripts.</b> Every episode in the public RSS feed was transcribed with Whisper (large-v3-turbo), with word-level timestamps.</li>
+  <li><b>Who guessed what.</b> Claude Haiku read each Science or Fiction segment twice, independently, and extracted each rogue's pick. A third run broke ties, and a separate pass checked the picks against Steve's recap at the reveal. The answer key came from theskepticsguide.org. On 10 hand-labelled episodes it got 39 of 39 picks right.</li>
+  <li><b>Clips.</b> Each "Okay, &lt;name&gt;" was re-aligned to the audio and checked against Steve's voice using a speaker-recognition model. Item readings were found by matching the item text on the website against the transcript.</li>
+  <li><b>Fair comparisons.</b> Every voice measurement is relative to Steve's own voice in the same episode, so recording quality and era drop out. Every model is tested on whole episodes it never saw in training.</li>
+  <li><b>Significance.</b> We shuffled the audio between clips that share the same position, cue word and era (for the items: the same item slot), retrained, and counted how often the shuffled version did as well. A low p means the real audio beats its own shuffles.</li>
+  <li><b>Excluded.</b> Live shows, specials, episodes without a usable answer key, and 13 episodes whose audio files are blank on the feed.</li>
+</ul>
+
+<h3>Caveats</h3>
+<ul>
+  <li>The speech-model embeddings could pick up a little of the wording as well as the voice. The measured features (pace, pitch, loudness) don't depend on the words, and they still clearly beat guessing even with the text model included. So the core finding doesn't depend on the embeddings.</li>
+  <li>Some guess labels may still be wrong despite the checks (the extraction got 39 of 39 right on hand-checked episodes). Wrong labels would weaken the "Okay" result, not create it.</li>
+  <li>Correlation, not mechanism: we can say the fiction is read differently, not why.</li>
+</ul>
+
+<footer>
+  Code and full results: <a href="https://github.com/shiftynick/sgu-ai">github.com/shiftynick/sgu-ai</a>. No audio or transcripts are included or shared; everything was analysed from the public feed.<br>
+  Made by a fan, with a lot of help from Claude. October 2026.
+</footer>
+</main>
+
+<script>
+const D = {
+  fiction: [
+    {label: 'Item position and length', v: 32.0, voice: false},
+    {label: 'Wording of the item (text only)', v: 40.2, voice: false},
+    {label: 'Pace and hesitation', v: 36.7, voice: true},
+    {label: 'Pitch and loudness', v: 40.5, voice: true},
+    {label: 'Emotion scores', v: 37.6, voice: true},
+    {label: 'All measured features', v: 41.0, voice: true},
+    {label: 'WavLM speech model', v: 46.7, voice: true},
+    {label: 'WavLM, fine-tuned', v: 48.1, voice: true},
+    {label: 'Emotion speech model', v: 48.4, voice: true},
+  ],
+  diff: [
+    {label: 'Loudness', v: 0.175, p: '<0.001'},
+    {label: 'Speaking rate (words per second)', v: 0.145, p: '<0.001'},
+    {label: 'Transcription confidence', v: 0.035, p: '0.002'},
+    {label: 'Pitch range', v: -0.078, p: '<0.001'},
+    {label: 'Energy (arousal)', v: -0.080, p: '<0.001'},
+    {label: 'Assertiveness (dominance)', v: -0.093, p: '<0.001'},
+    {label: 'Pitch variation', v: -0.106, p: '0.001'},
+    {label: 'Loudness variation', v: -0.174, p: '<0.001'},
+  ],
+  era: [
+    {label: '2005–09', n: 162, a: 61.1, b: 46.9},
+    {label: '2010–13', n: 172, a: 47.1, b: 43.0},
+    {label: '2014–17', n: 167, a: 50.9, b: 40.1},
+    {label: '2018–21', n: 171, a: 41.5, b: 39.8},
+    {label: '2022–26', n: 214, a: 48.6, b: 40.7},
+  ],
+  okay: [
+    {label: 'Baseline (no audio)', v: 0.604, sig: false, base: true},
+    {label: '+ pitch, loudness and timing', v: 0.604, sig: false, p: '0.23'},
+    {label: '+ his words during the turn', v: 0.601, sig: false, p: '0.17'},
+    {label: '+ emotion scores', v: 0.626, sig: true, p: '0.005'},
+    {label: '+ emotion speech model', v: 0.621, sig: true, p: '0.005'},
+    {label: '+ WavLM speech model', v: 0.627, sig: true, p: '0.005'},
+  ],
+};
+
+const NS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function txt(parent, x, y, s, attrs) { const t = el('text', Object.assign({x, y}, attrs || {}), parent); t.textContent = s; return t; }
+function tooltip(host) { const t = document.createElement('div'); t.className = 'tip'; host.appendChild(t); return t; }
+function showTip(tip, host, evt, value, key) {
+  tip.replaceChildren(); const b = document.createElement('b'); b.textContent = value; const k = document.createElement('span'); k.className = 'k'; k.textContent = key;
+  tip.append(b, k);
+  const r = host.getBoundingClientRect(); let x = evt.clientX - r.left + 12, y = evt.clientY - r.top - 10;
+  if (x + 260 > r.width) x = Math.max(0, evt.clientX - r.left - 200);
+  tip.style.left = x + 'px'; tip.style.top = y + 'px'; tip.style.opacity = 1;
+}
+function hook(mark, tip, host, value, key) {
+  mark.setAttribute('tabindex', '0'); mark.setAttribute('class', 'mark'); mark.setAttribute('aria-label', key + ': ' + value);
+  mark.addEventListener('pointermove', e => showTip(tip, host, e, value, key));
+  mark.addEventListener('pointerleave', () => tip.style.opacity = 0);
+  mark.addEventListener('focus', () => { const b = mark.getBoundingClientRect(); showTip(tip, host, {clientX: b.right, clientY: b.top + b.height / 2}, value, key); });
+  mark.addEventListener('blur', () => tip.style.opacity = 0);
+}
+// a bar with a 4px rounded data end and a square baseline end
+function hbarPath(x0, x1, y, h) {
+  const r = Math.min(4, Math.abs(x1 - x0) / 2, h / 2);
+  if (x1 >= x0) return `M${x0},${y}H${x1 - r}Q${x1},${y} ${x1},${y + r}V${y + h - r}Q${x1},${y + h} ${x1 - r},${y + h}H${x0}Z`;
+  return `M${x0},${y}H${x1 + r}Q${x1},${y} ${x1},${y + r}V${y + h - r}Q${x1},${y + h} ${x1 + r},${y + h}H${x0}Z`;
+}
+function vbarPath(x, w, y0, y1) {
+  const r = Math.min(4, w / 2, Math.abs(y0 - y1) / 2);
+  return `M${x},${y0}V${y1 + r}Q${x},${y1} ${x + r},${y1}H${x + w - r}Q${x + w},${y1} ${x + w},${y1 + r}V${y0}Z`;
+}
+function table(id, head, rows) {
+  const t = document.createElement('table'); const tr = t.insertRow();
+  head.forEach(h => { const th = document.createElement('th'); th.textContent = h; tr.appendChild(th); });
+  rows.forEach(r => { const row = t.insertRow(); r.forEach((c, i) => { const td = row.insertCell(); td.textContent = c; if (i) td.className = 'n'; }); });
+  document.getElementById(id).appendChild(t);
+}
+
+// horizontal bars, 0-60%, with the chance line
+(function () {
+  const host = document.getElementById('c-fiction'), tip = tooltip(host);
+  const W = 720, L = 250, R = 56, rowH = 34, barH = 18, top = 24, n = D.fiction.length, H = top + n * rowH + 28;
+  const svg = el('svg', {viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': 'Bar chart of how often each approach picks the fiction'}, host);
+  const x = v => L + (v / 60) * (W - L - R);
+  [0, 10, 20, 30, 40, 50, 60].forEach(t => { el('line', {x1: x(t), x2: x(t), y1: top, y2: top + n * rowH, stroke: 'var(--grid)', 'stroke-width': 1}, svg); txt(svg, x(t), H - 8, t + '%', {'text-anchor': 'middle', 'font-size': 13, fill: 'var(--text-muted)'}); });
+  D.fiction.forEach((d, i) => {
+    const y = top + i * rowH + (rowH - barH) / 2;
+    txt(svg, L - 12, y + barH / 2 + 5, d.label, {'text-anchor': 'end', 'font-size': 14, fill: 'var(--text-primary)'});
+    const p = el('path', {d: hbarPath(x(0), x(d.v), y, barH), fill: d.voice ? 'var(--series-1)' : 'var(--context)'}, svg);
+    hook(p, tip, host, d.v.toFixed(1) + '%', d.label);
+    txt(svg, x(d.v) + 6, y + barH / 2 + 5, d.v.toFixed(0) + '%', {'font-size': 13, fill: 'var(--text-secondary)', class: 'v'});
+  });
+  el('line', {x1: x(0), x2: x(0), y1: top, y2: top + n * rowH, stroke: 'var(--axis)', 'stroke-width': 1}, svg);
+  el('line', {x1: x(33.3), x2: x(33.3), y1: top - 4, y2: top + n * rowH, stroke: 'var(--text-secondary)', 'stroke-width': 1.5}, svg);
+  txt(svg, x(33.3), top - 10, 'guessing (33%)', {'text-anchor': 'middle', 'font-size': 12, fill: 'var(--text-secondary)'});
+  table('t-fiction', ['Approach', 'Picks the fiction'], D.fiction.map(d => [d.label, d.v.toFixed(1) + '%']));
+})();
+
+// diverging bars around zero
+(function () {
+  const host = document.getElementById('c-diff'), tip = tooltip(host);
+  const W = 720, L = 250, R = 40, rowH = 32, barH = 16, top = 8, n = D.diff.length, H = top + n * rowH + 28, M = 0.26;
+  const svg = el('svg', {viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': 'Diverging bar chart of how the fiction is read differently'}, host);
+  const x = v => L + ((v + M) / (2 * M)) * (W - L - R);
+  [-0.2, -0.1, 0, 0.1, 0.2].forEach(t => { el('line', {x1: x(t), x2: x(t), y1: top, y2: top + n * rowH, stroke: t === 0 ? 'var(--axis)' : 'var(--grid)', 'stroke-width': 1}, svg); txt(svg, x(t), H - 8, (t > 0 ? '+' : '') + t.toFixed(1), {'text-anchor': 'middle', 'font-size': 13, fill: 'var(--text-muted)'}); });
+  D.diff.forEach((d, i) => {
+    const y = top + i * rowH + (rowH - barH) / 2;
+    txt(svg, L - 12, y + barH / 2 + 5, d.label, {'text-anchor': 'end', 'font-size': 14, fill: 'var(--text-primary)'});
+    const p = el('path', {d: hbarPath(x(0), x(d.v), y, barH), fill: d.v > 0 ? 'var(--pos)' : 'var(--neg)'}, svg);
+    hook(p, tip, host, (d.v > 0 ? '+' : '') + d.v.toFixed(2) + ' SD', d.label + ' (p ' + d.p + ')');
+    const lx = d.v > 0 ? x(d.v) + 6 : x(d.v) - 6;
+    txt(svg, lx, y + barH / 2 + 5, (d.v > 0 ? '+' : '−') + Math.abs(d.v).toFixed(2), {'font-size': 13, fill: 'var(--text-secondary)', 'text-anchor': d.v > 0 ? 'start' : 'end'});
+  });
+  table('t-diff', ['Feature', 'Fiction minus real (SD)', 'p'], D.diff.map(d => [d.label, (d.v > 0 ? '+' : '') + d.v.toFixed(3), d.p]));
+})();
+
+// grouped columns by era, with the chance line
+(function () {
+  const host = document.getElementById('c-era'), tip = tooltip(host);
+  const W = 720, L = 44, R = 64, top = 12, plotH = 220, H = top + plotH + 46, n = D.era.length, band = (W - L - R) / n, bw = 24, gap = 2;
+  const svg = el('svg', {viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': 'Column chart of fiction picks by era'}, host);
+  const y = v => top + plotH - (v / 70) * plotH;
+  [0, 10, 20, 30, 40, 50, 60, 70].forEach(t => { el('line', {x1: L, x2: W - R, y1: y(t), y2: y(t), stroke: t ? 'var(--grid)' : 'var(--axis)', 'stroke-width': 1}, svg); txt(svg, L - 8, y(t) + 4, t + '%', {'text-anchor': 'end', 'font-size': 13, fill: 'var(--text-muted)'}); });
+  D.era.forEach((d, i) => {
+    const cx = L + band * i + band / 2;
+    [['a', 'var(--series-1)', 'Emotion model'], ['b', 'var(--series-2)', 'Measured features']].forEach(([k, c, name], j) => {
+      const bx = j === 0 ? cx - bw - gap / 2 : cx + gap / 2;
+      const p = el('path', {d: vbarPath(bx, bw, y(0), y(d[k])), fill: c}, svg);
+      hook(p, tip, host, d[k].toFixed(1) + '%', name + ', ' + d.label + ' (' + d.n + ' episodes)');
+      if (j === 0) txt(svg, bx + bw / 2, y(d[k]) - 6, d[k].toFixed(0) + '%', {'text-anchor': 'middle', 'font-size': 12, fill: 'var(--text-secondary)'});
+    });
+    txt(svg, cx, top + plotH + 20, d.label, {'text-anchor': 'middle', 'font-size': 14, fill: 'var(--text-primary)'});
+    txt(svg, cx, top + plotH + 38, d.n + ' episodes', {'text-anchor': 'middle', 'font-size': 12, fill: 'var(--text-muted)'});
+  });
+  el('line', {x1: L, x2: W - R, y1: y(33.3), y2: y(33.3), stroke: 'var(--text-secondary)', 'stroke-width': 1.5}, svg);
+  txt(svg, W - R + 6, y(33.3) + 4, 'guessing', {'font-size': 12, fill: 'var(--text-secondary)'});
+  table('t-era', ['Era', 'Episodes', 'Emotion model', 'Measured features'], D.era.map(d => [d.label, String(d.n), d.a.toFixed(1) + '%', d.b.toFixed(1) + '%']));
+})();
+
+// dot plot of AUC from 0.5 (chance)
+(function () {
+  const host = document.getElementById('c-okay'), tip = tooltip(host);
+  const W = 720, L = 250, R = 56, rowH = 32, top = 8, n = D.okay.length, H = top + n * rowH + 28, lo = 0.5, hi = 0.7;
+  const svg = el('svg', {viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': 'Dot plot of AUC for the Okay models'}, host);
+  const x = v => L + ((v - lo) / (hi - lo)) * (W - L - R);
+  [0.5, 0.55, 0.6, 0.65, 0.7].forEach(t => { el('line', {x1: x(t), x2: x(t), y1: top, y2: top + n * rowH, stroke: t === 0.5 ? 'var(--axis)' : 'var(--grid)', 'stroke-width': 1}, svg); txt(svg, x(t), H - 8, t.toFixed(2) + (t === 0.5 ? ' coin flip' : ''), {'text-anchor': t === 0.5 ? 'start' : 'middle', 'font-size': 13, fill: 'var(--text-muted)'}); });
+  const bx = x(D.okay[0].v);
+  el('line', {x1: bx, x2: bx, y1: top, y2: top + n * rowH, stroke: 'var(--text-secondary)', 'stroke-width': 1.5}, svg);
+  D.okay.forEach((d, i) => {
+    const cy = top + i * rowH + rowH / 2;
+    txt(svg, L - 12, cy + 5, d.label, {'text-anchor': 'end', 'font-size': 14, fill: 'var(--text-primary)', 'font-weight': d.base ? 600 : 400});
+    el('line', {x1: x(lo), x2: x(d.v), y1: cy, y2: cy, stroke: d.sig ? 'var(--series-1)' : 'var(--context)', 'stroke-width': 2, 'stroke-linecap': 'round'}, svg);
+    const c = el('circle', {cx: x(d.v), cy, r: 6, fill: d.sig ? 'var(--series-1)' : 'var(--context)', stroke: 'var(--surface-1)', 'stroke-width': 2}, svg);
+    const hit = el('circle', {cx: x(d.v), cy, r: 14, fill: 'transparent'}, svg);
+    hook(hit, tip, host, 'AUC ' + d.v.toFixed(3), d.label + (d.p ? ' (p ' + d.p + ')' : ''));
+    txt(svg, x(d.v) + 12, cy + 5, d.v.toFixed(3), {'font-size': 13, fill: 'var(--text-secondary)'});
+  });
+  table('t-okay', ['Model', 'AUC', 'p (vs baseline)'], D.okay.map(d => [d.label, d.v.toFixed(3), d.p || '']));
+})();
+</script>
+</body>
+</html>
